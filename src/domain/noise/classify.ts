@@ -1,7 +1,7 @@
 import { invariant } from '../errors.ts';
 import type { NoiseClass, NoiseSummary, SpectrumBin } from '../types.ts';
 
-function slopeAtLowFrequency(spectrum: SpectrumBin[]): number | null {
+export function lowFrequencySlope(spectrum: SpectrumBin[]): number | null {
   const points = spectrum.filter((bin) => bin.frequencyHz > 0 && bin.frequencyHz <= Math.max(1, spectrum[Math.floor(spectrum.length / 10)]?.frequencyHz ?? 1) && bin.power > 0);
   if (points.length < 2) return null;
   const first = points[0];
@@ -13,7 +13,7 @@ export function summarizeNoise(spectrum: SpectrumBin[], coherence: number | null
   invariant(spectrum.length > 0, 'EMPTY_SPECTRUM', 'Cannot classify noise without a spectrum');
   const positive = spectrum.filter((bin) => bin.frequencyHz > 0);
   if (!positive.length) return { class: 'insufficient-data', whiteLevel: 0, lowFrequencySlope: null, dominantFrequencyHz: null, integratedPower: 0, crossChannelCoherence: coherence, confidence: 0 };
-  const slope = slopeAtLowFrequency(spectrum);
+  const slope = lowFrequencySlope(spectrum);
   const dominant = positive.reduce((best, item) => item.power > best.power ? item : best, positive[0]);
   const integratedPower = positive.reduce((sum, item) => sum + item.power, 0);
   const whiteLevel = positive.slice(-Math.max(1, Math.floor(positive.length / 5))).reduce((sum, item) => sum + item.power, 0) / Math.max(1, Math.floor(positive.length / 5));

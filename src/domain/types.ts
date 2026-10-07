@@ -124,3 +124,90 @@ export type AnalysisResult = {
   scanResults: Array<{ label: string; noise: NoiseSummary; decay: DecayFit | null }>;
   warnings: string[];
 };
+
+export type DriftVerdict = 'stable' | 'needs-review' | 'incomparable';
+
+export type DriftRunInput = {
+  label: string;
+  sampleRateHz: number;
+  spectrum: SpectrumBin[];
+  crossSpectrum?: CrossSpectrumBin[];
+  coherence?: number | null;
+};
+
+export type DriftReportRequest = { runs: DriftRunInput[] };
+
+export type DriftAbruptInterval = {
+  bandId: 'low-frequency-drift' | 'broadband-white-floor';
+  startFrequencyHz: number;
+  endFrequencyHz: number;
+  binCount: number;
+  fromRun: string;
+  toRun: string;
+  peakDeltaDb: number | null;
+  zeroPowerTransition: boolean;
+};
+
+export type DriftBandReport = {
+  id: 'low-frequency-drift' | 'broadband-white-floor';
+  frequencyRangeHz: { start: number; end: number };
+  binCount: number;
+  baselines: Array<{ run: string; meanPower: number; zeroPowerBins: number[] }>;
+  lowFrequencySlopes: Array<{ run: string; slope: number | null }>;
+  direction: 'flat' | 'rising' | 'fading';
+  monotonic: boolean;
+  totalChangeDb: number | null;
+  maxAdjacentChangeDb: number | null;
+  abruptIntervals: DriftAbruptInterval[];
+  stable: boolean;
+};
+
+export type DriftPeakReport = {
+  applicable: boolean;
+  comparable: boolean;
+  perRun: Array<{ run: string; dominantFrequencyHz: number | null; power: number | null; prominence: number | null; periodic: boolean }>;
+  frequencySpreadHz: number | null;
+  reasons: string[];
+  stable: boolean;
+};
+
+export type DriftCorrelationReport = {
+  applicable: boolean;
+  comparable: boolean;
+  perRun: Array<{ run: string; meanCoherence: number | null; correlated: boolean }>;
+  maxDelta: number | null;
+  thresholdCrossed: boolean;
+  reasons: string[];
+  stable: boolean;
+};
+
+export type DriftRunAssessment = {
+  label: string;
+  sampleRateHz: number;
+  binCount: number;
+  positiveBinCount: number;
+  noiseClass: NoiseClass;
+  noise: NoiseSummary;
+  grid: { spacingHz: number; firstFrequencyHz: number; lastFrequencyHz: number };
+  missingFrequencyHz: number[];
+};
+
+export type DriftReport = {
+  verdict: DriftVerdict;
+  runs: DriftRunAssessment[];
+  frequencyGrid: {
+    comparable: boolean;
+    sampleRateHz: number | null;
+    spacingHz: number | null;
+    sharedPositiveBinCount: number;
+    frequencyRangeHz: { start: number; end: number } | null;
+    completeCoverage: boolean;
+  };
+  bands: DriftBandReport[];
+  peak: DriftPeakReport | null;
+  correlation: DriftCorrelationReport | null;
+  abruptIntervals: DriftAbruptInterval[];
+  reasons: string[];
+  warnings: string[];
+  conclusion: string;
+};

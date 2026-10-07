@@ -124,3 +124,56 @@ export type AnalysisResult = {
   scanResults: Array<{ label: string; noise: NoiseSummary; decay: DecayFit | null }>;
   warnings: string[];
 };
+
+export type SpectralDriftVerdict = 'stable' | 'needs-review' | 'not-comparable';
+export type SpectralDriftDirection = 'increasing' | 'decreasing' | 'flat';
+
+export type SpectralRunInput = {
+  runLabel: string;
+  sampleRateHz: number;
+  spectrum: SpectrumBin[];
+  coherence?: number | null;
+};
+
+export type SpectralDriftRequest = {
+  runs: SpectralRunInput[];
+  jumpThresholdRatio?: number;
+  driftToleranceRatio?: number;
+};
+
+export type SpectralRunAssessment = {
+  runLabel: string;
+  sampleRateHz: number;
+  noise: NoiseSummary;
+  bandIntegratedPower: number | null;
+  missingBinCount: number | null;
+};
+
+export type SpectralBaselineBin = {
+  frequencyHz: number;
+  medianPower: number;
+  minPower: number;
+  maxPower: number;
+  spreadRatio: number;
+};
+
+export type SpectralAbruptInterval = {
+  startHz: number;
+  endHz: number;
+  maxJumpRatio: number;
+  betweenRuns: [string, string];
+};
+
+export type SpectralDriftReport = {
+  inputDigest: string;
+  runCount: number;
+  verdict: SpectralDriftVerdict;
+  reasons: string[];
+  warnings: string[];
+  runs: SpectralRunAssessment[];
+  comparableBandHz: { lowHz: number; highHz: number } | null;
+  comparableBinCount: number;
+  baseline: SpectralBaselineBin[];
+  direction: SpectralDriftDirection | null;
+  abruptIntervals: SpectralAbruptInterval[];
+};

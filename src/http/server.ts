@@ -1,6 +1,7 @@
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { DomainError } from '../domain/errors.ts';
+import { buildSpectralDriftReport } from '../domain/noise/drift.ts';
 import { analyzeExperiment } from '../application/analysis-service.ts';
 import { cancel, get, submit } from '../application/job-store.ts';
 
@@ -19,6 +20,7 @@ export function createServer() {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
       if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { status: 'ok', service: 'cryogenic-quantum-noise-inversion-service' });
       if (request.method === 'POST' && url.pathname === '/v1/experiments/preview') return send(response, 200, analyzeExperiment(await readJson(request)));
+      if (request.method === 'POST' && url.pathname === '/v1/spectra/drift-report') return send(response, 200, buildSpectralDriftReport(await readJson(request)));
       if (request.method === 'POST' && url.pathname === '/v1/analyses') { const input = await readJson(request); return send(response, 202, submit(input, request.headers['idempotency-key']?.toString())); }
       const match = url.pathname.match(/^\/v1\/analyses\/([^/]+)(?:\/(cancel))?$/);
       if (match && request.method === 'GET' && !match[2]) return send(response, 200, get(match[1]));
